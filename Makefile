@@ -1,4 +1,6 @@
-obj-m := main.o
+CFILES = main.c
+obj-m := device.o
+device-objs := $(CFILES:.c=.o)
 
 .PHONY: all
 all:
