@@ -17,6 +17,7 @@ static const unsigned int MINOR_NUM = 2;
 
 static unsigned int mydevice_major;
 static struct cdev mydevice_cdev;
+static struct class *mydevice_class = NULL;
 
 static int mydevice_open(struct inode *inode, struct file *file)
 {
@@ -60,7 +61,7 @@ static int mydevice_init(void)
 
 	alloc_ret = alloc_chrdev_region(&dev, MINOR_BASE, MINOR_NUM, DRIVER_NAME);
 	if (alloc_ret != 0) {
-		printk(KERN_ERR "alloc_chrdev_region = %c\n", alloc_ret);
+		printk(KERN_ERR "alloc_chrdev_region = %d\n", alloc_ret);
 		return -1;
 	}
 
@@ -77,6 +78,18 @@ static int mydevice_init(void)
 		return -1;
 	}
 
+	mydevice_class = class_create(THIS_MODULE, "mydevice");
+	if (IS_ERR(mydevice_class)) {
+		printk(KERN_ERR "class create\n");
+		cdev_del(&mydevice_cdev);
+		unregister_chrdev_region(dev, MINOR_NUM);
+		return -1;
+	}
+
+	for (int minor = MINOR_BASE; minor < MINOR_BASE + MINOR_NUM; minor++) {
+		device_create(mydevice_class, NULL, MKDEV(mydevice_major, minor), NULL, "mydevice%d", minor);
+	}
+
 	return 0;
 }
 
@@ -85,7 +98,15 @@ static void mydevice_exit(void)
 	printk("mydevice exit\n");
 
 	dev_t dev = MKDEV(mydevice_major, MINOR_BASE);
+
+	for (int minor = MINOR_BASE; minor < MINOR_BASE + MINOR_NUM; minor++) {
+		device_destroy(mydevice_class, MKDEV(mydevice_major, minor));
+	}
+
+	class_destroy(mydevice_class);
+
 	cdev_del(&mydevice_cdev);
+
 	unregister_chrdev_region(dev, MINOR_NUM);
 }
 
