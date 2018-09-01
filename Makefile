@@ -1,6 +1,6 @@
 CFILES = main.c
-obj-m := device.o
-device-objs := $(CFILES:.c=.o)
+obj-m := mydevice.o
+mydevice-objs := $(CFILES:.c=.o)
 
 ccflags-y += -std=gnu99 -Wall -Wno-declaration-after-statement
 
