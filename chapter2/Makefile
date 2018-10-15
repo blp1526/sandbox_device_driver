@@ -1,4 +1,6 @@
-obj-m := main.o
+CFILES = main.c
+obj-m := mydevice.o
+mydevice-objs := $(CFILES:.c=.o)
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(shell pwd) modules
